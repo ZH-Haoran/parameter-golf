@@ -16,7 +16,7 @@ Adapt the current best baseline to local single-GPU environment. Find the strong
 
 ## Setup
 
-1. **Tag**: propose tag like `mar23-local`, create branch `autoresearch/<tag>`
+1. **Branch**: propose tag like `mar23-local`, create from current branch: `git checkout -b autoresearch/<tag>`
 2. **Read**: `README.md`, `my_runs/2026-03-23_best_10L_base/README.md`, `my_runs/2026-03-23_best_10L_base/train_gpt.py` (first ~200 lines)
 3. **Verify data**: `ls data/datasets/fineweb10B_sp1024/` — if missing, run `python3 data/cached_challenge_fineweb.py --variant sp1024 --train-shards 10`
 4. **Init results.tsv**: header row `commit	val_bpb	memory_gb	status	description` (tabs)
