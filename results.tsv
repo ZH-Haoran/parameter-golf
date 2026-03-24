@@ -1,3 +1,4 @@
 commit	val_bpb	memory_gb	status	description
 24afe41	2.800200	0.0	keep	local baseline unmodified (189 steps, warmdown broken)
 7b1e4bf	1.408320	2.0	keep	batch=65536 warmdown=600 muon_warmup=200 eval_stride=0
+a60cf7e	1.364891	3.6	keep	batch=131072 warmdown=300
