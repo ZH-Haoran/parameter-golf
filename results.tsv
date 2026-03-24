@@ -5,3 +5,4 @@ a60cf7e	1.364891	3.6	keep	batch=131072 warmdown=300
 52872c9	0.000000	0.0	discard	batch=262144 too slow 2.9s/step
 778e336	1.358080	5.1	keep	batch=196608 warmdown=250
 f7f5050	1.368380	5.1	discard	matrix_lr=0.03 scalar_lr=0.03
+17f9dad	1.361800	5.1	discard	matrix_lr=0.015 scalar_lr=0.015
