@@ -8,3 +8,4 @@ f7f5050	1.368380	5.1	discard	matrix_lr=0.03 scalar_lr=0.03
 17f9dad	1.361800	5.1	discard	matrix_lr=0.015 scalar_lr=0.015
 a71632c	1.361758	5.1	discard	tied_embed_lr=0.05
 485de13	1.355462	5.1	keep	warmdown=400
+7acc56a	1.345090	5.0	discard	muon_momentum_warmup_steps=150
