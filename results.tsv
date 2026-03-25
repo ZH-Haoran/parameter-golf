@@ -18,3 +18,4 @@ f9d67eb	1.320508	5.0	keep	muon_momentum=0.95
 d6acba4	1.319297	5.0	keep	muon_momentum_warmup_start=0.85
 a2828a7	1.319507	5.0	discard	weight_decay=0.03
 a2828a7	1.323756	5.0	discard	muon_momentum=0.96
+a2828a7	1.319533	5.0	discard	grad_clip_norm=0.4
