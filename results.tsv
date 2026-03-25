@@ -15,3 +15,4 @@ df3a0dc	1.340277	5.0	keep	muon_momentum_warmup_steps=250
 774fff0	1.341386	5.0	discard	warmdown=350
 f9d67eb	1.320508	5.0	keep	muon_momentum=0.95
 60e738e	1.319891	5.0	keep	warmup_steps=30
+d6acba4	1.319297	5.0	keep	muon_momentum_warmup_start=0.85
