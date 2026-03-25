@@ -30,3 +30,4 @@ ae41334	1.318920	5.0	keep	muon_momentum_warmup_steps=300
 234ade5	1.322710	5.0	discard	muon_momentum=0.94
 234ade5	1.318893	5.0	discard	scalar_lr=0.018
 234ade5	1.318529	5.0	discard	warmup_steps=40
+234ade5	1.323081	5.0	discard	muon_momentum_warmup_steps=350
