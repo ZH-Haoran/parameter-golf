@@ -28,3 +28,4 @@ ae41334	1.318920	5.0	keep	muon_momentum_warmup_steps=300
 234ade5	1.320838	5.0	discard	matrix_lr=0.018
 234ade5	1.318958	5.0	discard	head_lr=0.012
 234ade5	1.322710	5.0	discard	muon_momentum=0.94
+234ade5	1.318893	5.0	discard	scalar_lr=0.018
