@@ -24,3 +24,4 @@ ae41334	1.318920	5.0	keep	muon_momentum_warmup_steps=300
 671c7ff	1.318077	5.0	keep	head_lr=0.010
 234ade5	1.322292	5.0	discard	embed_lr=0.45
 234ade5	1.319033	5.0	discard	muon_momentum_warmup_start=0.80
+234ade5	1.321065	5.0	discard	warmdown=450
