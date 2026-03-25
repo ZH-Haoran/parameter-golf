@@ -21,3 +21,4 @@ a2828a7	1.323756	5.0	discard	muon_momentum=0.96
 a2828a7	1.319533	5.0	discard	grad_clip_norm=0.4
 ae41334	1.318920	5.0	keep	muon_momentum_warmup_steps=300
 7aab820	1.318470	5.0	keep	embed_lr=0.5
+671c7ff	1.318077	5.0	keep	head_lr=0.010
