@@ -13,3 +13,4 @@ df3a0dc	1.340277	5.0	keep	muon_momentum_warmup_steps=250
 774fff0	1.468815	12.6	discard	batch=524288
 774fff0	1.536114	7.3	discard	batch=294912
 774fff0	1.341386	5.0	discard	warmdown=350
+f9d67eb	1.320508	5.0	keep	muon_momentum=0.95
