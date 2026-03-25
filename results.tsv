@@ -11,3 +11,4 @@ a71632c	1.361758	5.1	discard	tied_embed_lr=0.05
 7acc56a	1.345090	5.0	discard	muon_momentum_warmup_steps=150
 df3a0dc	1.340277	5.0	keep	muon_momentum_warmup_steps=250
 774fff0	1.468815	12.6	discard	batch=524288
+774fff0	1.536114	7.3	discard	batch=294912
