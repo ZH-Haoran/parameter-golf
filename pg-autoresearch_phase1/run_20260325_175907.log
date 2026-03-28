@@ -1,0 +1,57 @@
+/zhaokunxiang/miniconda3/lib/python3.13/site-packages/torch/cuda/__init__.py:63: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+/zhaokunxiang/miniconda3/lib/python3.13/site-packages/torch/cuda/__init__.py:63: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+logs/stage1_exp_175907.txt
+val_bpb:enabled tokenizer_kind=sentencepiece tokenizer_path=./data/tokenizers/fineweb_1024_bpe.model
+train_loader:dataset:fineweb10B_sp1024 train_shards:80
+val_loader:shards pattern=./data/datasets/fineweb10B_sp1024/fineweb_val_*.bin tokens:62021632
+model_params:25517137
+world_size:1 grad_accum_steps:8
+attention_mode:gqa num_heads:8 num_kv_heads:4
+tie_embeddings:True embed_lr:0.03 matrix_lr:0.02 scalar_lr:0.02
+train_batch_tokens:196608 train_seq_len:2048 iterations:20000 warmup_steps:30 max_wallclock_seconds:600.000
+seed:42
+warmup_step:10/30
+warmup_step:20/30
+warmup_step:30/30
+step:0/20000 val_loss:6.9323 val_bpb:4.1057 train_time:0ms step_avg:0.03ms
+step:1/20000 train_loss:6.9344 train_time:494ms step_avg:493.81ms
+step:2/20000 train_loss:8.3143 train_time:898ms step_avg:448.85ms
+step:3/20000 train_loss:7.8328 train_time:1301ms step_avg:433.66ms
+step:4/20000 train_loss:7.0968 train_time:1705ms step_avg:426.22ms
+step:5/20000 train_loss:6.8108 train_time:2112ms step_avg:422.34ms
+step:6/20000 train_loss:6.5751 train_time:2519ms step_avg:419.83ms
+step:7/20000 train_loss:6.5483 train_time:2926ms step_avg:418.05ms
+step:8/20000 train_loss:6.5306 train_time:3333ms step_avg:416.69ms
+step:9/20000 train_loss:6.5027 train_time:3741ms step_avg:415.63ms
+step:10/20000 train_loss:6.2822 train_time:4148ms step_avg:414.80ms
+step:100/20000 train_loss:3.3009 train_time:40813ms step_avg:408.13ms
+step:200/20000 train_loss:2.9560 train_time:81437ms step_avg:407.18ms
+step:300/20000 train_loss:2.6299 train_time:121851ms step_avg:406.17ms
+step:400/20000 train_loss:2.6039 train_time:162277ms step_avg:405.69ms
+step:500/20000 train_loss:2.5320 train_time:202697ms step_avg:405.39ms
+step:500/20000 val_loss:2.5215 val_bpb:1.4934 train_time:202698ms step_avg:405.40ms
+step:600/20000 train_loss:2.4508 train_time:243336ms step_avg:405.56ms
+step:700/20000 train_loss:2.4653 train_time:283792ms step_avg:405.42ms
+step:800/20000 train_loss:2.3960 train_time:324232ms step_avg:405.29ms
+step:900/20000 train_loss:2.4290 train_time:364672ms step_avg:405.19ms
+step:1000/20000 train_loss:2.4834 train_time:405127ms step_avg:405.13ms
+step:1000/20000 val_loss:2.3766 val_bpb:1.4076 train_time:405128ms step_avg:405.13ms
+step:1100/20000 train_loss:2.3885 train_time:445851ms step_avg:405.32ms
+step:1200/20000 train_loss:2.2994 train_time:486295ms step_avg:405.25ms
+step:1300/20000 train_loss:2.2779 train_time:526727ms step_avg:405.17ms
+swa:start step:1350
+step:1400/20000 train_loss:2.3643 train_time:572597ms step_avg:409.00ms
+step:1451/20000 val_loss:2.2197 val_bpb:1.3146 train_time:603208ms step_avg:415.72ms
+stopping_early: wallclock_cap train_time:603208ms step:1451/20000
+peak memory allocated: 5114 MiB reserved: 5330 MiB
+swa:applying averaged 3 checkpoints
+Serialized model: 98437419 bytes
+Code size: 52927 bytes
+Total submission size: 98490346 bytes
+Serialized model int6+zstd: 15697718 bytes
+Total submission size int8+zlib: 15750645 bytes
+final_eval_mode:standard
+final_int8_zlib_roundtrip val_loss:2.2271 val_bpb:1.3190 eval_time:32115ms
+final_int8_zlib_roundtrip_exact val_loss:2.22713160 val_bpb:1.31903278

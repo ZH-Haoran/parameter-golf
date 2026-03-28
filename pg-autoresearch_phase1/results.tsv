@@ -1,0 +1,39 @@
+commit	val_bpb	memory_gb	status	description
+24afe41	2.800200	0.0	keep	local baseline unmodified (189 steps, warmdown broken)
+7b1e4bf	1.408320	2.0	keep	batch=65536 warmdown=600 muon_warmup=200 eval_stride=0
+a60cf7e	1.364891	3.6	keep	batch=131072 warmdown=300
+52872c9	0.000000	0.0	discard	batch=262144 too slow 2.9s/step
+778e336	1.358080	5.1	keep	batch=196608 warmdown=250
+f7f5050	1.368380	5.1	discard	matrix_lr=0.03 scalar_lr=0.03
+17f9dad	1.361800	5.1	discard	matrix_lr=0.015 scalar_lr=0.015
+a71632c	1.361758	5.1	discard	tied_embed_lr=0.05
+485de13	1.355462	5.1	keep	warmdown=400
+7acc56a	1.345090	5.0	discard	muon_momentum_warmup_steps=150
+df3a0dc	1.340277	5.0	keep	muon_momentum_warmup_steps=250
+774fff0	1.468815	12.6	discard	batch=524288
+774fff0	1.536114	7.3	discard	batch=294912
+774fff0	1.341386	5.0	discard	warmdown=350
+f9d67eb	1.320508	5.0	keep	muon_momentum=0.95
+60e738e	1.319891	5.0	keep	warmup_steps=30
+d6acba4	1.319297	5.0	keep	muon_momentum_warmup_start=0.85
+a2828a7	1.319507	5.0	discard	weight_decay=0.03
+a2828a7	1.323756	5.0	discard	muon_momentum=0.96
+a2828a7	1.319533	5.0	discard	grad_clip_norm=0.4
+ae41334	1.318920	5.0	keep	muon_momentum_warmup_steps=300
+7aab820	1.318470	5.0	keep	embed_lr=0.5
+671c7ff	1.318077	5.0	keep	head_lr=0.010
+234ade5	1.322292	5.0	discard	embed_lr=0.45
+234ade5	1.319033	5.0	discard	muon_momentum_warmup_start=0.80
+234ade5	1.321065	5.0	discard	warmdown=450
+234ade5	1.320838	5.0	discard	matrix_lr=0.018
+234ade5	1.318958	5.0	discard	head_lr=0.012
+234ade5	1.322710	5.0	discard	muon_momentum=0.94
+234ade5	1.318893	5.0	discard	scalar_lr=0.018
+234ade5	1.318529	5.0	discard	warmup_steps=40
+234ade5	1.323081	5.0	discard	muon_momentum_warmup_steps=350
+234ade5	1.318938	5.0	discard	embed_lr=0.55
+234ade5	1.323136	5.0	discard	tied_embed_lr=0.025
+234ade5	1.318796	5.0	discard	beta2=0.96
+234ade5	1.319150	5.0	discard	head_lr=0.009
+234ade5	1.319405	5.0	discard	muon_momentum_warmup_steps=280
+234ade5	1.319426	5.0	discard	warmdown=380

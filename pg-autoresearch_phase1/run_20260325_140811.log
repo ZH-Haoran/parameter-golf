@@ -1,0 +1,61 @@
+/zhaokunxiang/miniconda3/lib/python3.13/site-packages/torch/cuda/__init__.py:63: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+/zhaokunxiang/miniconda3/lib/python3.13/site-packages/torch/cuda/__init__.py:63: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+logs/stage1_exp_140811.txt
+val_bpb:enabled tokenizer_kind=sentencepiece tokenizer_path=./data/tokenizers/fineweb_1024_bpe.model
+train_loader:dataset:fineweb10B_sp1024 train_shards:80
+val_loader:shards pattern=./data/datasets/fineweb10B_sp1024/fineweb_val_*.bin tokens:62021632
+model_params:25517137
+world_size:1 grad_accum_steps:8
+attention_mode:gqa num_heads:8 num_kv_heads:4
+tie_embeddings:True embed_lr:0.03 matrix_lr:0.02 scalar_lr:0.02
+train_batch_tokens:294912 train_seq_len:2048 iterations:20000 warmup_steps:20 max_wallclock_seconds:600.000
+seed:42
+warmup_step:1/20
+warmup_step:2/20
+warmup_step:3/20
+warmup_step:4/20
+warmup_step:5/20
+warmup_step:6/20
+warmup_step:7/20
+warmup_step:8/20
+warmup_step:9/20
+warmup_step:10/20
+warmup_step:11/20
+warmup_step:12/20
+warmup_step:13/20
+warmup_step:14/20
+warmup_step:15/20
+warmup_step:16/20
+warmup_step:17/20
+warmup_step:18/20
+warmup_step:19/20
+warmup_step:20/20
+step:0/20000 val_loss:6.9323 val_bpb:4.1057 train_time:0ms step_avg:0.02ms
+step:1/20000 train_loss:6.9340 train_time:1462ms step_avg:1462.01ms
+step:2/20000 train_loss:8.2489 train_time:3001ms step_avg:1500.69ms
+step:3/20000 train_loss:7.7752 train_time:4434ms step_avg:1478.14ms
+step:4/20000 train_loss:7.0010 train_time:5736ms step_avg:1433.88ms
+step:5/20000 train_loss:6.8269 train_time:7235ms step_avg:1447.01ms
+step:6/20000 train_loss:6.6006 train_time:8920ms step_avg:1486.63ms
+step:7/20000 train_loss:6.4783 train_time:10436ms step_avg:1490.83ms
+step:8/20000 train_loss:6.4464 train_time:12034ms step_avg:1504.23ms
+step:9/20000 train_loss:6.3956 train_time:13635ms step_avg:1514.97ms
+step:10/20000 train_loss:6.3957 train_time:15050ms step_avg:1504.98ms
+step:100/20000 train_loss:3.2161 train_time:149143ms step_avg:1491.43ms
+step:200/20000 train_loss:2.7944 train_time:295542ms step_avg:1477.71ms
+swa:start step:250
+step:300/20000 train_loss:2.6281 train_time:446022ms step_avg:1486.74ms
+step:398/20000 val_loss:2.5453 val_bpb:1.5075 train_time:600636ms step_avg:1509.14ms
+stopping_early: wallclock_cap train_time:600636ms step:398/20000
+peak memory allocated: 7459 MiB reserved: 7780 MiB
+swa:applying averaged 3 checkpoints
+Serialized model: 98437419 bytes
+Code size: 52927 bytes
+Total submission size: 98490346 bytes
+Serialized model int6+zstd: 15805271 bytes
+Total submission size int8+zlib: 15858198 bytes
+final_eval_mode:standard
+final_int8_zlib_roundtrip val_loss:2.5937 val_bpb:1.5361 eval_time:32226ms
+final_int8_zlib_roundtrip_exact val_loss:2.59366388 val_bpb:1.53611384
