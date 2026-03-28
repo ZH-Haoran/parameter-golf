@@ -34,6 +34,189 @@ from torch import Tensor, nn
 from torch.nn.parallel import DistributedDataParallel as DDP
 
 # -----------------------------
+# PC LAYER COMPONENTS
+# -----------------------------
+
+class LearnableGamma(nn.Module):
+    def __init__(self, reparam: str, a: float = 1.0, b: float = 1.0):
+        super().__init__()
+        assert reparam in ("none", "sigmoid", "tanh")
+        self.reparam = reparam
+        self.a0 = float(a)
+        self.b0 = float(b)
+        self.v = nn.Parameter(torch.zeros(1))
+
+    @torch.no_grad()
+    def reset_parameters(self, init_gamma: float):
+        if self.v is None or self.v.is_meta:
+            return
+        self.v.fill_(float(init_gamma))
+
+    def value(self) -> torch.Tensor:
+        if self.reparam == "none":
+            return self.v
+        x = self.b0 * self.v
+        if self.reparam == "sigmoid":
+            return self.a0 * torch.sigmoid(x)
+        else:
+            return self.a0 * torch.tanh(x)
+
+
+class PCConfig:
+    def __init__(self):
+        self.pc_level = int(os.environ.get("PC_LEVEL", "2"))
+        self.pc_norm_type = os.environ.get("PC_NORM_TYPE", "F")
+        self.pc_norm_eps = float(os.environ.get("PC_NORM_EPS", "1e-8"))
+        self.scale_constant = float(os.environ.get("PC_SCALE_CONSTANT", "1.0"))
+        self.recover_w_norm = bool(int(os.environ.get("PC_RECOVER_W_NORM", "1")))
+        self.detach_norm_compute = bool(int(os.environ.get("PC_DETACH_NORM_COMPUTE", "1")))
+        self.detach_norm_recover = bool(int(os.environ.get("PC_DETACH_NORM_RECOVER", "1")))
+        self.consider_mup = bool(int(os.environ.get("PC_CONSIDER_MUP", "0")))
+        self.mup_type = os.environ.get("PC_MUP_TYPE", "max_one")
+        self.learnable_gamma = bool(int(os.environ.get("PC_LEARNABLE_GAMMA", "0")))
+        self.gamma_reparam = os.environ.get("PC_GAMMA_REPARAM", "none")
+        self.gamma_a = float(os.environ.get("PC_GAMMA_A", "1.0"))
+        self.gamma_b = float(os.environ.get("PC_GAMMA_B", "1.0"))
+        self.gamma_init_value = float(os.environ.get("PC_GAMMA_INIT_VALUE", "1.0"))
+
+
+class PCTransform(nn.Module):
+    def __init__(self, model_config):
+        super().__init__()
+        self.model_config = model_config
+
+    def forward(self, weight, gamma=None):
+        return self.apply_preconditioner(weight=weight, gamma=gamma)
+
+    def apply_preconditioner(self, weight, gamma=None):
+        W_normalized, W_norm = self.pc_normalize(weight=weight)
+        r, c = W_normalized.shape
+
+        if r >= c:
+            W_preconditioned = self.preconditionertall(weight=W_normalized)
+        else:
+            W_preconditioned = self.preconditionerwide(weight=W_normalized)
+
+        W_preconditioned *= self.model_config.scale_constant
+        if self.model_config.recover_w_norm:
+            norm_for_recover = W_norm.detach() if self.model_config.detach_norm_recover else W_norm
+            W_preconditioned = W_preconditioned * norm_for_recover
+        if self.model_config.consider_mup:
+            if self.model_config.mup_type == 'raw':
+                mup_width_mult = math.sqrt(r / c)
+            elif self.model_config.mup_type == 'max_one':
+                mup_width_mult = max(1, math.sqrt(r / c))
+            else:
+                raise ValueError("mup_type can only be 'raw' or 'max_one'!")
+            W_preconditioned = W_preconditioned * mup_width_mult
+        if self.model_config.learnable_gamma and gamma is not None:
+            gamma = gamma.to(dtype=W_preconditioned.dtype, device=W_preconditioned.device)
+            W_preconditioned = W_preconditioned * gamma
+
+        return W_preconditioned
+
+    def pc_normalize(self, weight):
+        if weight.ndim != 2:
+            raise ValueError("Weight must be a 2D tensor")
+
+        if self.model_config.pc_norm_type == 'none':
+            W_norm = torch.tensor(1.0, dtype=weight.dtype, device=weight.device)
+        elif self.model_config.pc_norm_type == "F":
+            W_norm = weight.norm() + self.model_config.pc_norm_eps
+        else:
+            raise ValueError(f"Unknown pc_norm_type: {self.model_config.pc_norm_type}")
+
+        norm_for_divide = W_norm.detach() if self.model_config.detach_norm_compute else W_norm
+        normalized_weight = weight / norm_for_divide
+        return normalized_weight, W_norm
+
+    def preconditionertall(self, weight):
+        pc_level = self.model_config.pc_level
+        if pc_level == 0:
+            return weight
+
+        _, c = weight.shape
+        I = torch.eye(c, device=weight.device, dtype=weight.dtype)
+        wtw = weight.t().mm(weight)
+
+        if pc_level == 1:
+            weight = weight.mm(1.507 * I - 0.507 * wtw)
+        elif pc_level == 2:
+            weight = weight.mm(2.083 * I + wtw.mm(-1.643 * I + 0.560 * wtw))
+        elif pc_level == 3:
+            weight = weight.mm(2.909 * I + wtw.mm(-4.649 * I + wtw.mm(4.023 * I - 1.283 * wtw)))
+        elif pc_level == 4:
+            weight = weight.mm(3.625 * I + wtw.mm(-9.261 * I + wtw.mm(14.097 * I + wtw.mm(-10.351 * I + 2.890 * wtw))))
+        else:
+            raise ValueError("No pre-conditioner provided")
+        return weight
+
+    def preconditionerwide(self, weight):
+        pc_level = self.model_config.pc_level
+        if pc_level == 0:
+            return weight
+
+        r, _ = weight.shape
+        I = torch.eye(r, device=weight.device, dtype=weight.dtype)
+        wwt = weight.mm(weight.t())
+
+        if pc_level == 1:
+            weight = (1.507 * I - 0.507 * wwt).mm(weight)
+        elif pc_level == 2:
+            weight = (2.083 * I + wwt.mm(-1.643 * I + 0.560 * wwt)).mm(weight)
+        elif pc_level == 3:
+            weight = (2.909 * I + wwt.mm(-4.649 * I + wwt.mm(4.023 * I - 1.283 * wwt))).mm(weight)
+        elif pc_level == 4:
+            weight = (3.625 * I + wwt.mm(-9.261 * I + wwt.mm(14.097 * I + wwt.mm(-10.351 * I + 2.890 * wwt)))).mm(weight)
+        else:
+            raise ValueError("No pre-conditioner provided")
+        return weight
+
+
+class PCLinear(nn.Module):
+    def __init__(self, linear: nn.Linear, model_args, layer_id: int):
+        super().__init__()
+        self.linear = linear
+        self.model_args = model_args
+        self.layer_id = layer_id
+        self.pc = PCTransform(model_args)
+
+        if model_args.learnable_gamma:
+            self.gamma = LearnableGamma(
+                reparam=model_args.gamma_reparam,
+                a=model_args.gamma_a,
+                b=model_args.gamma_b,
+            )
+        else:
+            self.gamma = None
+
+        self._gamma_inited_after_materialize = False
+
+    @torch.no_grad()
+    def _maybe_init_gamma(self):
+        if self.gamma is None or self._gamma_inited_after_materialize:
+            return
+        v = self.gamma.v
+        if v is not None and (not v.is_meta):
+            self.gamma.reset_parameters(self.model_args.gamma_init_value)
+            self._gamma_inited_after_materialize = True
+
+    def forward(self, x):
+        self._maybe_init_gamma()
+        g = self.gamma.value() if self.gamma is not None else None
+        w = self.pc(self.linear.weight, gamma=g)
+        return F.linear(x, w, self.linear.bias)
+
+    @property
+    def weight(self):
+        return self.linear.weight
+
+    @property
+    def bias(self):
+        return self.linear.bias
+
+
+# -----------------------------
 # HYPERPARAMETERS
 # -----------------------------
 
@@ -44,6 +227,7 @@ class Hyperparameters:
     tokenizer_path = os.environ.get("TOKENIZER_PATH", "./data/tokenizers/fineweb_1024_bpe.model")
     run_id = os.environ.get("RUN_ID", str(uuid.uuid4()))
     seed = int(os.environ.get("SEED", 42))
+    use_pc_layer = bool(int(os.environ.get("USE_PC_LAYER", "0")))
 
     val_batch_size = int(os.environ.get("VAL_BATCH_SIZE", 524_288))
     val_loss_every = int(os.environ.get("VAL_LOSS_EVERY", 500))
@@ -520,7 +704,7 @@ def apply_rotary_emb(x: Tensor, cos: Tensor, sin: Tensor) -> Tensor:
 
 
 class CausalSelfAttention(nn.Module):
-    def __init__(self, dim: int, num_heads: int, num_kv_heads: int, rope_base: float, qk_gain_init: float):
+    def __init__(self, dim: int, num_heads: int, num_kv_heads: int, rope_base: float, qk_gain_init: float, use_pc: bool = False, pc_config = None, layer_id: int = 0):
         super().__init__()
         if dim % num_heads != 0:
             raise ValueError("model_dim must be divisible by num_heads")
@@ -532,16 +716,28 @@ class CausalSelfAttention(nn.Module):
         if self.head_dim % 2 != 0:
             raise ValueError("head_dim must be even for RoPE")
         kv_dim = self.num_kv_heads * self.head_dim
+
         self.c_q = CastedLinear(dim, dim, bias=False)
         self.c_k = CastedLinear(dim, kv_dim, bias=False)
         self.c_v = CastedLinear(dim, kv_dim, bias=False)
         self.proj = CastedLinear(dim, dim, bias=False)
         self.proj._zero_init = True
+
+        if use_pc and pc_config is not None:
+            self.c_q = PCLinear(self.c_q, pc_config, layer_id * 10 + 0)
+            self.c_k = PCLinear(self.c_k, pc_config, layer_id * 10 + 1)
+            self.c_v = PCLinear(self.c_v, pc_config, layer_id * 10 + 2)
+            self.proj = PCLinear(self.proj, pc_config, layer_id * 10 + 3)
+
         self.q_gain = nn.Parameter(torch.full((num_heads,), qk_gain_init, dtype=torch.float32))
         self.rotary = Rotary(self.head_dim, base=rope_base)
 
     def forward(self, x: Tensor) -> Tensor:
         bsz, seqlen, dim = x.shape
+        q_linear = self.c_q.linear if isinstance(self.c_q, PCLinear) else self.c_q
+        k_linear = self.c_k.linear if isinstance(self.c_k, PCLinear) else self.c_k
+        v_linear = self.c_v.linear if isinstance(self.c_v, PCLinear) else self.c_v
+
         q = self.c_q(x).reshape(bsz, seqlen, self.num_heads, self.head_dim).transpose(1, 2)
         k = self.c_k(x).reshape(bsz, seqlen, self.num_kv_heads, self.head_dim).transpose(1, 2)
         v = self.c_v(x).reshape(bsz, seqlen, self.num_kv_heads, self.head_dim).transpose(1, 2)
@@ -560,12 +756,16 @@ class CausalSelfAttention(nn.Module):
 
 
 class MLP(nn.Module):
-    def __init__(self, dim: int, mlp_mult: float):
+    def __init__(self, dim: int, mlp_mult: float, use_pc: bool = False, pc_config = None, layer_id: int = 0):
         super().__init__()
         hidden = int(mlp_mult * dim)
         self.fc = CastedLinear(dim, hidden, bias=False)
         self.proj = CastedLinear(hidden, dim, bias=False)
         self.proj._zero_init = True
+
+        if use_pc and pc_config is not None:
+            self.fc = PCLinear(self.fc, pc_config, layer_id * 10 + 4)
+            self.proj = PCLinear(self.proj, pc_config, layer_id * 10 + 5)
 
     def forward(self, x: Tensor) -> Tensor:
         x = torch.relu(self.fc(x))
@@ -612,12 +812,12 @@ class BigramHashEmbedding(nn.Module):
 
 
 class Block(nn.Module):
-    def __init__(self, dim: int, num_heads: int, num_kv_heads: int, mlp_mult: float, rope_base: float, qk_gain_init: float):
+    def __init__(self, dim: int, num_heads: int, num_kv_heads: int, mlp_mult: float, rope_base: float, qk_gain_init: float, use_pc: bool = False, pc_config = None, layer_id: int = 0):
         super().__init__()
         self.attn_norm = RMSNorm()
         self.mlp_norm = RMSNorm()
-        self.attn = CausalSelfAttention(dim, num_heads, num_kv_heads, rope_base, qk_gain_init)
-        self.mlp = MLP(dim, mlp_mult)
+        self.attn = CausalSelfAttention(dim, num_heads, num_kv_heads, rope_base, qk_gain_init, use_pc, pc_config, layer_id)
+        self.mlp = MLP(dim, mlp_mult, use_pc, pc_config, layer_id)
         self.attn_scale = nn.Parameter(torch.ones(dim, dtype=torch.float32))
         self.mlp_scale = nn.Parameter(torch.ones(dim, dtype=torch.float32))
         self.resid_mix = nn.Parameter(torch.stack((torch.ones(dim), torch.zeros(dim))).float())
@@ -647,6 +847,8 @@ class GPT(nn.Module):
         qk_gain_init: float,
         bigram_vocab_size: int = 0,
         bigram_dim: int = 128,
+        use_pc: bool = False,
+        pc_config = None,
     ):
         super().__init__()
         if logit_softcap <= 0.0:
@@ -663,8 +865,8 @@ class GPT(nn.Module):
         self.smear = SmearGate(model_dim)
         self.blocks = nn.ModuleList(
             [
-                Block(model_dim, num_heads, num_kv_heads, mlp_mult, rope_base, qk_gain_init)
-                for _ in range(num_layers)
+                Block(model_dim, num_heads, num_kv_heads, mlp_mult, rope_base, qk_gain_init, use_pc, pc_config, i)
+                for i in range(num_layers)
             ]
         )
         self.final_norm = RMSNorm()
@@ -902,6 +1104,7 @@ def main() -> None:
     log0(f"val_loader:shards pattern={args.val_files} tokens:{val_tokens.numel() - 1}")
 
     # MODEL + OPTIMIZER SETUP
+    pc_config = PCConfig() if args.use_pc_layer else None
     base_model = GPT(
         vocab_size=args.vocab_size,
         num_layers=args.num_layers,
@@ -916,6 +1119,8 @@ def main() -> None:
         qk_gain_init=args.qk_gain_init,
         bigram_vocab_size=args.bigram_vocab_size,
         bigram_dim=args.bigram_dim,
+        use_pc=args.use_pc_layer,
+        pc_config=pc_config,
     ).to(device).bfloat16()
     for module in base_model.modules():
         if isinstance(module, CastedLinear):
